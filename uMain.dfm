@@ -57,31 +57,13 @@ object frMain: TfrMain
       Height = 13
       Caption = #1055#1086#1088#1090
     end
-    object Button1: TButton
-      Left = 639
-      Top = 6
-      Width = 75
-      Height = 25
-      Caption = #1047#1072#1087#1088#1086#1089
-      TabOrder = 0
-      OnClick = Button1Click
-    end
     object edURL: TEdit
       Left = 33
       Top = 8
       Width = 400
       Height = 21
-      TabOrder = 1
+      TabOrder = 0
       Text = 'https://api.bittrex.com/v3/markets/summaries'
-    end
-    object Button2: TButton
-      Left = 720
-      Top = 6
-      Width = 75
-      Height = 25
-      Caption = #1060#1072#1081#1083
-      TabOrder = 2
-      OnClick = Button2Click
     end
     object Button3: TButton
       Left = 8
@@ -89,7 +71,7 @@ object frMain: TfrMain
       Width = 121
       Height = 25
       Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1085#1072#1089#1090#1088#1086#1081#1082#1080
-      TabOrder = 3
+      TabOrder = 1
       OnClick = Button3Click
     end
     object Button4: TButton
@@ -98,7 +80,7 @@ object frMain: TfrMain
       Width = 129
       Height = 25
       Caption = #1047#1072#1075#1088#1091#1079#1080#1090#1100' '#1085#1072#1089#1090#1088#1086#1081#1082#1080
-      TabOrder = 4
+      TabOrder = 2
       OnClick = Button4Click
     end
     object btnStart: TButton
@@ -107,7 +89,7 @@ object frMain: TfrMain
       Width = 75
       Height = 25
       Caption = #1057#1090#1072#1088#1090
-      TabOrder = 5
+      TabOrder = 3
       OnClick = btnStartClick
     end
     object btnStop: TButton
@@ -117,7 +99,7 @@ object frMain: TfrMain
       Height = 25
       Caption = #1057#1090#1086#1087
       Enabled = False
-      TabOrder = 6
+      TabOrder = 4
       OnClick = btnStopClick
     end
     object edUser: TEdit
@@ -125,7 +107,7 @@ object frMain: TfrMain
       Top = 45
       Width = 84
       Height = 21
-      TabOrder = 7
+      TabOrder = 5
     end
     object edPass: TEdit
       Left = 220
@@ -133,14 +115,14 @@ object frMain: TfrMain
       Width = 100
       Height = 21
       PasswordChar = '*'
-      TabOrder = 8
+      TabOrder = 6
     end
     object edIP: TEdit
       Left = 348
       Top = 45
       Width = 121
       Height = 21
-      TabOrder = 9
+      TabOrder = 7
     end
     object edPort: TEdit
       Left = 511
@@ -148,15 +130,15 @@ object frMain: TfrMain
       Width = 62
       Height = 21
       NumbersOnly = True
-      TabOrder = 10
+      TabOrder = 8
     end
     object Button5: TButton
-      Left = 896
+      Left = 912
       Top = 6
       Width = 75
       Height = 25
       Caption = #1054#1073#1085#1086#1074#1080#1090#1100
-      TabOrder = 11
+      TabOrder = 9
       OnClick = Button5Click
     end
   end
@@ -167,8 +149,6 @@ object frMain: TfrMain
     Height = 373
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 89
-    ExplicitHeight = 397
     object cxGrid1DBTableView1: TcxGridDBTableView
       Navigator.Buttons.CustomButtons = <>
       OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
@@ -183,8 +163,14 @@ object frMain: TfrMain
       OptionsData.Inserting = False
       OptionsSelection.CellSelect = False
       object cxGrid1DBTableView1Column1: TcxGridDBColumn
+        Caption = 'symbol1'
         DataBinding.FieldName = 'symbol'
-        Width = 139
+        Width = 86
+      end
+      object cxGrid1DBTableView1Column8: TcxGridDBColumn
+        Caption = 'symbol2'
+        DataBinding.FieldName = 'symbol'
+        Width = 96
       end
       object cxGrid1DBTableView1Column2: TcxGridDBColumn
         DataBinding.FieldName = 'high'
@@ -231,8 +217,8 @@ object frMain: TfrMain
     Request.Ranges.Units = 'bytes'
     Request.Ranges = <>
     HTTPOptions = [hoForceEncodeParams]
-    Left = 672
-    Top = 48
+    Left = 128
+    Top = 304
   end
   object IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL
     MaxLineAction = maException
@@ -243,80 +229,36 @@ object frMain: TfrMain
     SSLOptions.Mode = sslmUnassigned
     SSLOptions.VerifyMode = []
     SSLOptions.VerifyDepth = 0
-    Left = 792
-    Top = 88
+    Left = 128
+    Top = 360
   end
   object FDConn: TFDConnection
     Params.Strings = (
       'Database=C:\Projects\TestJSON\Win32\Debug\testJSON.db'
       'DriverID=SQLite')
-    Left = 832
-    Top = 216
-  end
-  object OpenDialog1: TOpenDialog
-    Left = 592
-    Top = 96
+    Left = 736
+    Top = 192
   end
   object DataSource1: TDataSource
     AutoEdit = False
     DataSet = FDTab
-    Left = 528
-    Top = 80
+    Left = 736
+    Top = 288
   end
   object FDTab: TFDTable
+    IndexFieldNames = 'symbol'
     Connection = FDConn
     UpdateOptions.UpdateTableName = 'summaries'
     Exclusive = True
     TableName = 'summaries'
     Left = 736
-    Top = 56
+    Top = 240
   end
   object Timer1: TTimer
     Enabled = False
     Interval = 10000
     OnTimer = Timer1Timer
-    Left = 176
-    Top = 240
-  end
-  object IniPropStorageManEh1: TIniPropStorageManEh
-    IniFileName = 'settings.ini'
-    Left = 288
-    Top = 200
-  end
-  object PropStorageEh1: TPropStorageEh
-    Active = False
-    StorageManager = IniPropStorageManEh1
-    StoredProps.Strings = (
-      '<P>.Height'
-      '<P>.Left'
-      '<P>.PixelsPerInch'
-      '<P>.Top'
-      '<P>.Width'
-      '<P>.WindowState'
-      'cxGrid1.cxGrid1DBTableView1.<P>.Preview.Column'
-      
-        'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column1.<P>.Group' +
-        'Index'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column1.<P>.Width'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column2.<P>.Width'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column3.<P>.Width'
-      
-        'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column4.<P>.Group' +
-        'Index'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column4.<P>.Width'
-      
-        'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column5.<P>.Group' +
-        'Index'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column5.<P>.Width'
-      
-        'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column6.<P>.Group' +
-        'Index'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column6.<P>.Width'
-      
-        'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column7.<P>.Group' +
-        'Index'
-      'cxGrid1.cxGrid1DBTableView1.cxGrid1DBTableView1Column7.<P>.Width')
-    Left = 392
-    Top = 232
+    Left = 608
+    Top = 64
   end
 end

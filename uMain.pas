@@ -18,8 +18,7 @@ uses
   dxDateRanges, cxDBData, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGridLevel, cxClasses, cxGridCustomView, cxGrid,
   FireDAC.Comp.BatchMove.DataSet, FireDAC.Comp.BatchMove,
-  FireDAC.Comp.BatchMove.Text, FireDAC.Stan.StorageJSON, PropFilerEh,
-  PropStorageEh;
+  FireDAC.Comp.BatchMove.Text, FireDAC.Stan.StorageJSON;
 
 type
   TfrMain = class(TForm)
@@ -28,10 +27,7 @@ type
     IdSSLIOHandlerSocketOpenSSL1: TIdSSLIOHandlerSocketOpenSSL;
     FDConn: TFDConnection;
     Panel1: TPanel;
-    Button1: TButton;
     edURL: TEdit;
-    Button2: TButton;
-    OpenDialog1: TOpenDialog;
     DataSource1: TDataSource;
     cxGrid1DBTableView1: TcxGridDBTableView;
     cxGrid1Level1: TcxGridLevel;
@@ -47,8 +43,6 @@ type
     Button3: TButton;
     Button4: TButton;
     Timer1: TTimer;
-    IniPropStorageManEh1: TIniPropStorageManEh;
-    PropStorageEh1: TPropStorageEh;
     btnStart: TButton;
     btnStop: TButton;
     Label2: TLabel;
@@ -60,8 +54,7 @@ type
     edIP: TEdit;
     edPort: TEdit;
     Button5: TButton;
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+    cxGrid1DBTableView1Column8: TcxGridDBColumn;
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -104,98 +97,6 @@ begin
   btnStop.Enabled:= False;
 end;
 
-procedure TfrMain.Button1Click(Sender: TObject);
-var
-  i: integer;
-  JSONValue: TJSONValue;
-begin
-  JSONValue:=  TJSONObject.ParseJSONValue(IdHTTP1.Get(edURL.Text));
-  try
-
-//    for i := 0 to FJSON.Count-1 do begin
-//        memo1.Lines.Add(FJSON.Pairs[i].JsonString.Value + ' = ' + FJSON.Pairs[i].JsonValue.Value);
-//    end;
-  finally
-    JSONValue.Free;
-  end;
-end;
-
-procedure TfrMain.Button2Click(Sender: TObject);
-var
-  sl: TStringList;
-  s, symbol: string;
-  high_value, low_value, volume, quoteVolume, percentChange: real;
-  date_update: TdateTime;
-  JSONValue, jv: TJSONValue;
-
-begin
-  if OpenDialog1.Execute then
-  begin
-
-    sl:= TStringList.Create;
-    try
-      sl.LoadFromFile(OpenDialog1.FileName);
-      JSONValue:=  TJSONObject.ParseJSONValue(sl.Text);
-      skey_change:= false;
-      fdtab.DisableControls;
-      try
-        if JSONValue is TJSONArray then begin
-          skey:= fdtab.FieldByName('symbol').AsString;
-          fdtab.Edit;
-          for jv in TJSONArray(JSONValue) do begin
-            FDTab.Insert;
-
-            if jv.TryGetValue('symbol', symbol) then
-            else symbol:= '';
-
-             if jv.TryGetValue('high', high_value) then
-              else high_value:= 0;
-
-              if jv.TryGetValue('low', low_value) then
-              else low_value:= 0;
-
-              if jv.TryGetValue('volume', volume) then
-              else volume:= 0;
-
-              if jv.TryGetValue('quoteVolume', quoteVolume) then
-              else quoteVolume:= 0;
-
-              if jv.TryGetValue('percentChange', percentChange) then
-              else percentChange:= 0;
-
-              if jv.TryGetValue('updatedAt', s) then
-              begin
-
-                date_update:= strtodatetime(s, fmt);
-              end
-              else date_update:= 0;
-
-             FDTab.FieldByName('symbol').AsString:= symbol;
-             FDTab.FieldByName('high').AsFloat:= high_value;
-             FDTab.FieldByName('low').AsFloat:= low_value;
-             FDTab.FieldByName('volume').AsFloat:= volume;
-             FDTab.FieldByName('quoteVolume').AsFloat:= quoteVolume;
-             FDTab.FieldByName('percentChange').AsFloat:= percentChange;
-             if date_update > 0 then
-             FDTab.FieldByName('updatedAt').AsDateTime:= date_update;
-
-             FDTab.Post;
-          end;
-          FDTab.Connection.Commit;
-          FDTab.Locate('symbol', skey);
-        end;
-      finally
-        fdtab.EnableControls;
-        JSONValue.Free;
-      end;
-    finally
-      sl.Free;
-    end;
-    skey_change:= true;
-    FindKeyRow;
-  end;
-end;
-
 procedure TfrMain.Button3Click(Sender: TObject);
 begin
   cxGrid1DBTableView1.StoreToIniFile(GetCurrentDir + '\grid_settings.ini');
@@ -212,7 +113,7 @@ procedure TfrMain.Button5Click(Sender: TObject);
 begin
   skey_change:= false;
   FDTab.Active:= false;
-  fdtab.Active:= true;
+  FDTab.Active:= true;
   skey_change:= true;
   FindKeyRow;
 end;
@@ -229,29 +130,27 @@ procedure TfrMain.cxGrid1DBTableView1FocusedRecordChanged(
   AFocusedRecord: TcxCustomGridRecord; ANewItemRecordFocusingChanged: Boolean);
 begin
   if skey_change then
-  skey:= fdtab.FieldByName('symbol').AsString;
-  //skey:= AFocusedRecord.Values[GetItemIndexColumnKey];
+  skey:= FDTab.FieldByName('symbol').AsString;
 end;
 
 procedure TfrMain.FindKeyRow();
+var
+  i, ii: integer;
 begin
   if not (skey = EmptyStr) then
   begin
+    ii:= GetItemIndexColumnKey;
     cxGrid1DBTableView1.Controller.ClearSelection;
-    with cxGrid1DBTableView1.DataController do
-    begin
-      BeginLocate;
-      try
-        DataSet.Locate('symbol', skey, []);
-      finally
-        EndLocate;
-      end;
-    end;
 
-    if Assigned(cxGrid1DBTableView1.Controller.FocusedRecord) then
+    for i := 0 to cxGrid1DBTableView1.DataController.RecordCount-1 do
     begin
-      cxGrid1DBTableView1.Controller.FocusedRecord.Selected := true;
-      cxGrid1.SetFocus;
+      if (cxGrid1DBTableView1.DataController.Values[i,ii] = skey) then
+      begin
+        cxGrid1DBTableView1.Controller.FocusedRowIndex:= cxGrid1DBTableView1.DataController.GetRowIndexByRecordIndex(i, True);;
+        cxGrid1.SetFocus;
+        break;
+      end;
+
     end;
 
   end;
@@ -279,9 +178,7 @@ begin
   fmt:= TFormatSettings.Create;
   fmt.DateSeparator:= '-';
   fmt.TimeSeparator:= ':';
-  {2020-10-14T06:27:48.74Z}
   fmt.ShortDateFormat:= 'yyyy-mm-ddThh:nn:ss';
-
 end;
 
 function TfrMain.GetItemIndexColumnKey: integer;
@@ -350,6 +247,7 @@ begin
 
     index_key:= GetItemIndexColumnKey;
     IniFile.EraseSection('GroupRow');
+
     //сохран€ем развернутые строки группировки
     for i := 0 to cxGrid1DBTableView1.ViewData.RecordCount-1 do
     begin
@@ -358,8 +256,6 @@ begin
         IniFile.WriteString('GroupRow', 'RowName_'+i.ToString, cxGrid1DBTableView1.ViewData.Records[i].Values[0]);
       end;
     end;
-
-
 
   finally
     IniFile.Free;
@@ -399,10 +295,10 @@ begin
   begin
     skey_change:= false;
     x := cxGrid1DBTableView1.Controller.TopRecordIndex;
-    fdtab.DisableControls;
+    FDTab.DisableControls;
     try
         if JSONValue is TJSONArray then begin
-          fdtab.Edit;
+          FDTab.Edit;
           for jv in TJSONArray(JSONValue) do begin
             FDTab.Insert;
 
@@ -445,13 +341,13 @@ begin
           FDTab.Connection.Commit;
         end;
     finally
-     fdtab.EnableControls;
+     FDTab.EnableControls;
      JSONValue.Free;
     end;
 
     skey_change:= true;
-    FindKeyRow;
     cxGrid1DBTableView1.Controller.TopRecordIndex:= x;
+    FindKeyRow;
   end;
 end;
 
