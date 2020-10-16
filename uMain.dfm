@@ -3,7 +3,7 @@ object frMain: TfrMain
   Top = 0
   Caption = 'frMain'
   ClientHeight = 486
-  ClientWidth = 1010
+  ClientWidth = 973
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,10 +25,11 @@ object frMain: TfrMain
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 1010
+    Width = 973
     Height = 113
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1010
     object Label2: TLabel
       Left = 8
       Top = 48
@@ -133,7 +134,7 @@ object frMain: TfrMain
       TabOrder = 8
     end
     object Button5: TButton
-      Left = 912
+      Left = 880
       Top = 6
       Width = 75
       Height = 25
@@ -145,10 +146,11 @@ object frMain: TfrMain
   object cxGrid1: TcxGrid
     Left = 0
     Top = 113
-    Width = 1010
+    Width = 973
     Height = 373
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 1010
     object cxGrid1DBTableView1: TcxGridDBTableView
       Navigator.Buttons.CustomButtons = <>
       OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
@@ -162,15 +164,17 @@ object frMain: TfrMain
       OptionsData.Editing = False
       OptionsData.Inserting = False
       OptionsSelection.CellSelect = False
-      object cxGrid1DBTableView1Column1: TcxGridDBColumn
-        Caption = 'symbol1'
+      object cxGrid1DBTableView1Column9: TcxGridDBColumn
         DataBinding.FieldName = 'symbol'
-        Width = 86
+        Visible = False
+      end
+      object cxGrid1DBTableView1Column1: TcxGridDBColumn
+        DataBinding.FieldName = 'symbol1'
+        Width = 72
       end
       object cxGrid1DBTableView1Column8: TcxGridDBColumn
-        Caption = 'symbol2'
-        DataBinding.FieldName = 'symbol'
-        Width = 96
+        DataBinding.FieldName = 'symbol2'
+        Width = 75
       end
       object cxGrid1DBTableView1Column2: TcxGridDBColumn
         DataBinding.FieldName = 'high'
@@ -242,17 +246,8 @@ object frMain: TfrMain
   object DataSource1: TDataSource
     AutoEdit = False
     DataSet = FDTab
-    Left = 736
-    Top = 288
-  end
-  object FDTab: TFDTable
-    IndexFieldNames = 'symbol'
-    Connection = FDConn
-    UpdateOptions.UpdateTableName = 'summaries'
-    Exclusive = True
-    TableName = 'summaries'
-    Left = 736
-    Top = 240
+    Left = 600
+    Top = 352
   end
   object Timer1: TTimer
     Enabled = False
@@ -260,5 +255,18 @@ object frMain: TfrMain
     OnTimer = Timer1Timer
     Left = 608
     Top = 64
+  end
+  object FDTab: TFDQuery
+    Connection = FDConn
+    SQL.Strings = (
+      
+        'select A.rowid, A.*, substr(A.symbol, 1, pos-1) symbol1, substr(' +
+        'A.symbol, pos+1, l) symbol2  '
+      'from '
+      '(SELECT t.*, instr(t.symbol, '#39'-'#39') pos, length(t.symbol) l'
+      '       '
+      '  FROM summaries t) A')
+    Left = 304
+    Top = 240
   end
 end

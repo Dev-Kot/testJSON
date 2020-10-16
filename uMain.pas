@@ -39,7 +39,6 @@ type
     cxGrid1DBTableView1Column5: TcxGridDBColumn;
     cxGrid1DBTableView1Column6: TcxGridDBColumn;
     cxGrid1DBTableView1Column7: TcxGridDBColumn;
-    FDTab: TFDTable;
     Button3: TButton;
     Button4: TButton;
     Timer1: TTimer;
@@ -55,6 +54,8 @@ type
     edPort: TEdit;
     Button5: TButton;
     cxGrid1DBTableView1Column8: TcxGridDBColumn;
+    FDTab: TFDQuery;
+    cxGrid1DBTableView1Column9: TcxGridDBColumn;
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -339,6 +340,7 @@ begin
              FDTab.Post;
           end;
           FDTab.Connection.Commit;
+          FDTab.Refresh;
         end;
     finally
      FDTab.EnableControls;
