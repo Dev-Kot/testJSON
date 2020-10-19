@@ -11,6 +11,7 @@ object frMain: TfrMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnClose = FormClose
   OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
@@ -29,7 +30,6 @@ object frMain: TfrMain
     Height = 113
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1010
     object Label2: TLabel
       Left = 8
       Top = 48
@@ -76,7 +76,7 @@ object frMain: TfrMain
       OnClick = Button3Click
     end
     object Button4: TButton
-      Left = 144
+      Left = 135
       Top = 80
       Width = 129
       Height = 25
@@ -133,14 +133,14 @@ object frMain: TfrMain
       NumbersOnly = True
       TabOrder = 8
     end
-    object Button5: TButton
-      Left = 880
-      Top = 6
-      Width = 75
+    object btnRefresh: TButton
+      Left = 279
+      Top = 80
+      Width = 105
       Height = 25
-      Caption = #1054#1073#1085#1086#1074#1080#1090#1100
+      Caption = #1054#1073#1085#1086#1074#1080#1090#1100' '#1089#1087#1080#1089#1086#1082
       TabOrder = 9
-      OnClick = Button5Click
+      OnClick = btnRefreshClick
     end
   end
   object cxGrid1: TcxGrid
@@ -150,10 +150,8 @@ object frMain: TfrMain
     Height = 373
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1010
     object cxGrid1DBTableView1: TcxGridDBTableView
       Navigator.Buttons.CustomButtons = <>
-      OnFocusedRecordChanged = cxGrid1DBTableView1FocusedRecordChanged
       DataController.DataSource = DataSource1
       DataController.Summary.DefaultGroupSummaryItems = <>
       DataController.Summary.FooterSummaryItems = <>
@@ -245,7 +243,7 @@ object frMain: TfrMain
   end
   object DataSource1: TDataSource
     AutoEdit = False
-    DataSet = FDTab
+    DataSet = FDQ
     Left = 600
     Top = 352
   end
@@ -256,7 +254,7 @@ object frMain: TfrMain
     Left = 608
     Top = 64
   end
-  object FDTab: TFDQuery
+  object FDQ: TFDQuery
     Connection = FDConn
     SQL.Strings = (
       

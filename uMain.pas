@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  System.JSON, System.iniFiles, System.ioutils,
+  System.JSON, System.iniFiles, System.ioutils, System.Generics.Collections,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, IdBaseComponent,
   IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, IdIOHandler,
   IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL, FireDAC.Stan.Intf,
@@ -52,34 +52,38 @@ type
     edPass: TEdit;
     edIP: TEdit;
     edPort: TEdit;
-    Button5: TButton;
+    btnRefresh: TButton;
     cxGrid1DBTableView1Column8: TcxGridDBColumn;
-    FDTab: TFDQuery;
+    FDQ: TFDQuery;
     cxGrid1DBTableView1Column9: TcxGridDBColumn;
     procedure FormShow(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
-    procedure cxGrid1DBTableView1FocusedRecordChanged(
-      Sender: TcxCustomGridTableView; APrevFocusedRecord,
-      AFocusedRecord: TcxCustomGridRecord;
-      ANewItemRecordFocusingChanged: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure btnStartClick(Sender: TObject);
     procedure btnStopClick(Sender: TObject);
-    procedure Button5Click(Sender: TObject);
+    procedure btnRefreshClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     var
       fmt: TFormatSettings;
       IniFile: TIniFile;
+      x: integer; //положение строки грида относительно грида
       skey: string; //ключ фокусной строки
-      skey_change: boolean;
+      skey_index: integer;
+      is_group_key: boolean; //если строка явялется группировкой
+      ListGroupRows: TList<integer>; //содержит список развернутых строк
     const
       FIniFile = 'Settings.ini';
     procedure SaveProp;
     procedure LoadProp;
     function GetItemIndexColumnKey: integer;
+    procedure GetKeyRow;
     procedure FindKeyRow();
+    procedure LoadGroupRowsExpand;
+    procedure SaveGroupRowsExpand;
+
   public
     { Public declarations }
   end;
@@ -100,6 +104,9 @@ end;
 
 procedure TfrMain.Button3Click(Sender: TObject);
 begin
+  x := cxGrid1DBTableView1.Controller.TopRecordIndex;
+  GetKeyRow;
+  SaveGroupRowsExpand;
   cxGrid1DBTableView1.StoreToIniFile(GetCurrentDir + '\grid_settings.ini');
   SaveProp;
 end;
@@ -108,15 +115,26 @@ procedure TfrMain.Button4Click(Sender: TObject);
 begin
   cxGrid1DBTableView1.RestoreFromIniFile(GetCurrentDir + '\grid_settings.ini');
   LoadProp;
+  LoadGroupRowsExpand;
+  FindKeyRow;
+  cxGrid1DBTableView1.Controller.TopRecordIndex:= x;
 end;
 
-procedure TfrMain.Button5Click(Sender: TObject);
+procedure TfrMain.btnRefreshClick(Sender: TObject);
 begin
-  skey_change:= false;
-  FDTab.Active:= false;
-  FDTab.Active:= true;
-  skey_change:= true;
+  FDQ.DisableControls;
+  try
+    x := cxGrid1DBTableView1.Controller.TopRecordIndex;
+    GetKeyRow;
+    SaveGroupRowsExpand;
+    FDQ.Active:= false;
+    FDQ.Active:= true;
+  finally
+    FDQ.EnableControls;
+  end;
+  LoadGroupRowsExpand;
   FindKeyRow;
+  cxGrid1DBTableView1.Controller.TopRecordIndex:= x;
 end;
 
 procedure TfrMain.btnStartClick(Sender: TObject);
@@ -126,41 +144,46 @@ begin
   Timer1.Enabled:= True;
 end;
 
-procedure TfrMain.cxGrid1DBTableView1FocusedRecordChanged(
-  Sender: TcxCustomGridTableView; APrevFocusedRecord,
-  AFocusedRecord: TcxCustomGridRecord; ANewItemRecordFocusingChanged: Boolean);
-begin
-  if skey_change then
-  skey:= FDTab.FieldByName('symbol').AsString;
-end;
-
 procedure TfrMain.FindKeyRow();
 var
   i, ii: integer;
 begin
   if not (skey = EmptyStr) then
   begin
+
     ii:= GetItemIndexColumnKey;
     cxGrid1DBTableView1.Controller.ClearSelection;
 
-    for i := 0 to cxGrid1DBTableView1.DataController.RecordCount-1 do
+    if is_group_key then
     begin
-      if (cxGrid1DBTableView1.DataController.Values[i,ii] = skey) then
+      cxGrid1DBTableView1.Controller.FocusedRowIndex:= skey_index;
+    end
+    else
+    begin
+      for i := 0 to cxGrid1DBTableView1.DataController.RecordCount-1 do
       begin
-        cxGrid1DBTableView1.Controller.FocusedRowIndex:= cxGrid1DBTableView1.DataController.GetRowIndexByRecordIndex(i, True);;
-        cxGrid1.SetFocus;
-        break;
+        if (cxGrid1DBTableView1.DataController.Values[i,ii] = skey) then
+        begin
+          cxGrid1DBTableView1.Controller.FocusedRowIndex:= cxGrid1DBTableView1.DataController.GetRowIndexByRecordIndex(i, True);;
+          cxGrid1.SetFocus;
+          break;
+        end;
       end;
-
     end;
 
   end;
 end;
 
+procedure TfrMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  ListGroupRows.Free;
+end;
+
 procedure TfrMain.FormCreate(Sender: TObject);
 begin
+  IdHTTP1.ReadTimeout:= 10000; //при превышении 10 секунд запрос прерывается с ошибкой
   skey:= '';
-  skey_change:= true;
+  ListGroupRows:= TList<integer>.Create;
 end;
 
 procedure TfrMain.FormShow(Sender: TObject);
@@ -168,7 +191,7 @@ begin
   FDConn.Params.Database:= GetCurrentDir + '\testJSON.db';
   try
     FDConn.Connected:= True;
-    FDTab.Active:= True;
+    FDQ.Active:= True;
   except
     on E: Exception do begin
       ShowMessage('Не удалось подключиться к БД: ' + #13#10 + E.Message);
@@ -193,6 +216,33 @@ begin
     Result:= i;
     break;
   end;
+end;
+
+procedure TfrMain.GetKeyRow;
+var
+  r: integer;
+begin
+  if cxGrid1DBTableView1.Controller.FocusedRow.IsData then
+  begin
+    //если строка не является группировкой
+    is_group_key:= False;
+    skey:= cxGrid1DBTableView1.Controller.FocusedRow.Values[GetItemIndexColumnKey];
+  end
+  else
+  begin
+    is_group_key:= True;
+    skey_index:= cxGrid1DBTableView1.Controller.FocusedRow.Index;
+  end;
+end;
+
+procedure TfrMain.LoadGroupRowsExpand;
+var
+  i: integer;
+begin
+    for i := 0 to ListGroupRows.Count-1 do
+    begin
+      cxGrid1DBTableView1.ViewData.Records[ListGroupRows.Items[i]].Expand(False);
+    end;
 end;
 
 procedure TfrMain.LoadProp;
@@ -234,6 +284,18 @@ begin
   FindKeyRow;
 end;
 
+procedure TfrMain.SaveGroupRowsExpand;
+var
+  i: integer;
+begin
+  ListGroupRows.Clear;
+  for i := 0 to cxGrid1DBTableView1.ViewData.RowCount-1 do
+  begin
+    if cxGrid1DBTableView1.ViewData.Records[i].Expanded then
+    ListGroupRows.Add(i);
+  end;
+end;
+
 procedure TfrMain.SaveProp;
 var
   IniFile: TIniFile;
@@ -271,8 +333,9 @@ var
   high_value, low_value, volume, quoteVolume, percentChange: real;
   date_update: TdateTime;
   JSONValue, jv: TJSONValue;
-  x: integer;
+
 begin
+  btnRefresh.Enabled:= False;
   try
     IdHTTP1.ProxyParams.ProxyUsername:= edUser.Text;
     IdHTTP1.ProxyParams.ProxyPassword:= edPass.Text;
@@ -294,14 +357,15 @@ begin
   if JSONValue = nil then
   else
   begin
-    skey_change:= false;
+//    skey:= cxGrid1DBTableView1.Controller.FocusedRow.Values[GetItemIndexColumnKey];
+    GetKeyRow;
     x := cxGrid1DBTableView1.Controller.TopRecordIndex;
-    FDTab.DisableControls;
+    FDQ.DisableControls;
     try
         if JSONValue is TJSONArray then begin
-          FDTab.Edit;
+          FDQ.Edit;
           for jv in TJSONArray(JSONValue) do begin
-            FDTab.Insert;
+            FDQ.Insert;
 
             if jv.TryGetValue('symbol', symbol) then
             else symbol:= '';
@@ -328,28 +392,28 @@ begin
               end
               else date_update:= 0;
 
-             FDTab.FieldByName('symbol').AsString:= symbol;
-             FDTab.FieldByName('high').AsFloat:= high_value;
-             FDTab.FieldByName('low').AsFloat:= low_value;
-             FDTab.FieldByName('volume').AsFloat:= volume;
-             FDTab.FieldByName('quoteVolume').AsFloat:= quoteVolume;
-             FDTab.FieldByName('percentChange').AsFloat:= percentChange;
+             FDQ.FieldByName('symbol').AsString:= symbol;
+             FDQ.FieldByName('high').AsFloat:= high_value;
+             FDQ.FieldByName('low').AsFloat:= low_value;
+             FDQ.FieldByName('volume').AsFloat:= volume;
+             FDQ.FieldByName('quoteVolume').AsFloat:= quoteVolume;
+             FDQ.FieldByName('percentChange').AsFloat:= percentChange;
              if date_update > 0 then
-             FDTab.FieldByName('updatedAt').AsDateTime:= date_update;
+             FDQ.FieldByName('updatedAt').AsDateTime:= date_update;
 
-             FDTab.Post;
+             FDQ.Post;
           end;
-          FDTab.Connection.Commit;
-          FDTab.Refresh;
+          FDQ.Connection.Commit;
+          FDQ.Refresh;
         end;
     finally
-     FDTab.EnableControls;
+     FDQ.EnableControls;
      JSONValue.Free;
     end;
 
-    skey_change:= true;
     cxGrid1DBTableView1.Controller.TopRecordIndex:= x;
     FindKeyRow;
+    btnRefresh.Enabled:= True;
   end;
 end;
 

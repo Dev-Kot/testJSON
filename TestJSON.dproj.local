@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>1899.12.30 00:00:00.000.775,C:\Projects\Unit1.pas=C:\Projects\TestJSON\uMain.pas</Transaction>
     <Transaction>1899.12.30 00:00:00.000.119,=C:\Projects\Unit1.pas</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.775,C:\Projects\Unit1.dfm=C:\Projects\TestJSON\uMain.dfm</Transaction>
-    <Transaction>1899.12.30 00:00:00.000.369,C:\Projects\Project1.dproj=C:\Projects\TestJSON\TestJSON.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.775,C:\Projects\TestJSON\uMain.pas=C:\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.775,C:\Projects\TestJSON\uMain.dfm=C:\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.369,C:\Projects\TestJSON\TestJSON.dproj=C:\Projects\Project1.dproj</Transaction>
   </Transactions>
 </BorlandProject>
