@@ -239,10 +239,11 @@ procedure TfrMain.LoadGroupRowsExpand;
 var
   i: integer;
 begin
-    for i := 0 to ListGroupRows.Count-1 do
-    begin
-      cxGrid1DBTableView1.ViewData.Records[ListGroupRows.Items[i]].Expand(False);
-    end;
+  cxGrid1DBTableView1.ViewData.Collapse(True);
+
+  for i := 0 to ListGroupRows.Count-1 do
+    cxGrid1DBTableView1.ViewData.Records[ListGroupRows.Items[i]].Expand(False);
+
 end;
 
 procedure TfrMain.LoadProp;
