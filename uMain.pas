@@ -106,7 +106,7 @@ procedure TfrMain.Button3Click(Sender: TObject);
 begin
   x := cxGrid1DBTableView1.Controller.TopRecordIndex;
   GetKeyRow;
-  SaveGroupRowsExpand;
+  //SaveGroupRowsExpand;
   cxGrid1DBTableView1.StoreToIniFile(GetCurrentDir + '\grid_settings.ini');
   SaveProp;
 end;
@@ -115,7 +115,7 @@ procedure TfrMain.Button4Click(Sender: TObject);
 begin
   cxGrid1DBTableView1.RestoreFromIniFile(GetCurrentDir + '\grid_settings.ini');
   LoadProp;
-  LoadGroupRowsExpand;
+  //LoadGroupRowsExpand;
   FindKeyRow;
   cxGrid1DBTableView1.Controller.TopRecordIndex:= x;
 end;
@@ -148,7 +148,9 @@ procedure TfrMain.FindKeyRow();
 var
   i, ii: integer;
 begin
-  if not (skey = EmptyStr) then
+  if ((skey = EmptyStr) and (not is_group_key)) or
+  ((skey_index <= 0) and (is_group_key)) then
+  else
   begin
 
     ii:= GetItemIndexColumnKey;
@@ -219,8 +221,6 @@ begin
 end;
 
 procedure TfrMain.GetKeyRow;
-var
-  r: integer;
 begin
   if cxGrid1DBTableView1.Controller.FocusedRow.IsData then
   begin
@@ -255,6 +255,7 @@ begin
   IniFile:=TIniFile.Create(GetCurrentDir + '\' + FIniFile);
   try
     skey:= IniFile.ReadString('Settings', 'key_string', '');
+    cxGrid1DBTableView1.ViewData.Collapse(True);
 
     if IniFile.SectionExists('GroupRow') then begin
        sl:= TStringList.Create;
@@ -262,14 +263,15 @@ begin
          IniFile.ReadSectionValues('GroupRow', sl);
 
          for i := 0 to sl.Count-1 do begin
-            for j := 0 to cxGrid1DBTableView1.ViewData.RecordCount-1 do
-            begin
-
-              if VarToStr(cxGrid1DBTableView1.ViewData.Records[j].Values[0]) = sl.Values[sl.Names[i]] then
-              begin
-                cxGrid1DBTableView1.ViewData.Records[j].Expand(False);
-              end;
-            end;
+           cxGrid1DBTableView1.ViewData.Records[sl.Values[sl.Names[i]].ToInteger].Expand(False);
+//            for j := 0 to cxGrid1DBTableView1.ViewData.RecordCount-1 do
+//            begin
+//
+//              if VarToStr(cxGrid1DBTableView1.ViewData.Records[j].Values[0]) = sl.Values[sl.Names[i]] then
+//              begin
+//                cxGrid1DBTableView1.ViewData.Records[j].Expand(False);
+//              end;
+//            end;
          end;
 
        finally
@@ -317,7 +319,7 @@ begin
     begin
       if cxGrid1DBTableView1.ViewData.Records[i].Expanded then
       begin
-        IniFile.WriteString('GroupRow', 'RowName_'+i.ToString, cxGrid1DBTableView1.ViewData.Records[i].Values[0]);
+        IniFile.WriteInteger('GroupRow', 'RowName_'+i.ToString, i);
       end;
     end;
 
@@ -334,7 +336,7 @@ var
   high_value, low_value, volume, quoteVolume, percentChange: real;
   date_update: TdateTime;
   JSONValue, jv: TJSONValue;
-
+  xx: integer;
 begin
   btnRefresh.Enabled:= False;
   try
@@ -358,9 +360,8 @@ begin
   if JSONValue = nil then
   else
   begin
-//    skey:= cxGrid1DBTableView1.Controller.FocusedRow.Values[GetItemIndexColumnKey];
     GetKeyRow;
-    x := cxGrid1DBTableView1.Controller.TopRecordIndex;
+    xx := cxGrid1DBTableView1.Controller.TopRecordIndex;
     FDQ.DisableControls;
     try
         if JSONValue is TJSONArray then begin
@@ -412,7 +413,7 @@ begin
      JSONValue.Free;
     end;
 
-    cxGrid1DBTableView1.Controller.TopRecordIndex:= x;
+    cxGrid1DBTableView1.Controller.TopRecordIndex:= xx;
     FindKeyRow;
     btnRefresh.Enabled:= True;
   end;
